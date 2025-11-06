@@ -2,3 +2,5 @@
 Môn Thiết kế Hệ thống Nhúng 
 
 Tên đề tài: RFID Lock 
+
+Video Demo: https://drive.google.com/drive/folders/1EJyoBcpR5TI39vi5_LgunK4Ymn7jQt8R?usp=sharing
