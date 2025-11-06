@@ -1,0 +1,4 @@
+../Core/Src/DFPlayer_Mini.c:11:6:send_command	40	static
+../Core/Src/DFPlayer_Mini.c:34:6:DF_Init	16	static
+../Core/Src/DFPlayer_Mini.c:38:6:DF_Play	16	static
+../Core/Src/DFPlayer_Mini.c:42:6:DF_SetVolume	16	static
