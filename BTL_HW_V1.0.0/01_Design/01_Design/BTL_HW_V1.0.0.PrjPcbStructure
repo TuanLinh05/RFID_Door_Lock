@@ -1,0 +1,6 @@
+Record=TopLevelDocument|FileName=Block_Diagram.SchDoc|SheetNumber=1
+Record=NoMainPathDocument|SourceDocument=Block_Diagram.SchDoc|FileName=LCD.SchDoc|SheetNumber=6
+Record=NoMainPathDocument|SourceDocument=Block_Diagram.SchDoc|FileName=MCU.SchDoc|SheetNumber=2
+Record=NoMainPathDocument|SourceDocument=Block_Diagram.SchDoc|FileName=POWER.SchDoc|SheetNumber=5
+Record=NoMainPathDocument|SourceDocument=Block_Diagram.SchDoc|FileName=Relay.SchDoc|SheetNumber=4
+Record=NoMainPathDocument|SourceDocument=Block_Diagram.SchDoc|FileName=RFID.SchDoc|SheetNumber=3
