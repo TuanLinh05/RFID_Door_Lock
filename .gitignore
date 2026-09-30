@@ -1,0 +1,27 @@
+# ---- OS / editor ----
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*~
+
+# ---- STM32CubeIDE build output ----
+Debug/
+Release/
+.metadata/
+*.o
+*.d
+*.su
+*.cyclo
+*.elf
+*.map
+*.list
+*.hex
+*.bin
+
+# ---- Altium Designer ----
+History/
+__Previews/
+Project Logs for */
+*.SchDocPreview
+*.PcbDocPreview
