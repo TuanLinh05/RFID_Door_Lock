@@ -5,6 +5,8 @@
 ![PCB](https://img.shields.io/badge/PCB-Altium%20Designer-A5915F)
 ![Language](https://img.shields.io/badge/Language-C-555555?logo=c)
 
+<a id="english"></a>**🇬🇧 English** · [🇻🇳 Tiếng Việt](#tieng-viet)
+
 A smart door lock that opens with an **RFID card** or a **keypad password**, built on an **STM32F103C8T6** with a **custom PCB**, an I²C character LCD, voice feedback and an admin menu for managing cards and passwords.
 
 **Course project – Embedded System Design, HCM University of Technology.**
@@ -55,6 +57,37 @@ RFID_Door_Lock/
    ```
 3. Copy 4 voice tracks (`0001.mp3` … `0004.mp3`: granted, denied, locked, admin) to the DFPlayer's micro-SD card.
 4. Open `Hardware/01_Design/BTL_HW_V1.0.0.PrjPcb` in **Altium Designer** to view or edit the PCB.
+
+---
+
+<a id="tieng-viet"></a>
+
+## 🇻🇳 Tiếng Việt
+
+[🇬🇧 English](#english) · **🇻🇳 Tiếng Việt**
+
+Khóa cửa thông minh mở bằng **thẻ RFID** hoặc **mật khẩu trên bàn phím**. Hệ thống dùng **STM32F103C8T6** trên **PCB tự thiết kế**, có màn hình LCD I²C, phát âm thanh thông báo và menu quản trị để quản lý thẻ và mật khẩu.
+
+**Bài tập lớn môn Thiết kế Hệ thống Nhúng, Trường Đại học Bách khoa – ĐHQG TP.HCM.**
+🎬 **Video demo:** [Google Drive](https://drive.google.com/drive/folders/1EJyoBcpR5TI39vi5_LgunK4Ymn7jQt8R?usp=sharing)
+
+### ✨ Tính năng
+
+- **Hai cách mở khóa:** thẻ RFID (MFRC522, giao tiếp SPI) hoặc mật khẩu trên bàn phím 4×4.
+- **Chế độ quản trị:** quét thẻ admin để đổi mật khẩu, thêm hoặc xóa thẻ, xem danh sách thẻ.
+- **Lưu trữ bền vững:** mật khẩu và danh sách thẻ được lưu trong **flash nội** của STM32, không mất khi tắt nguồn.
+- **Chống dò mật khẩu:** sai 5 lần thì khóa **5 phút**. Sai 7 lần khóa **10 phút**, sai 9 lần khóa **20 phút**.
+- **Phản hồi:** trạng thái hiện trên LCD I²C, âm thanh từ **DFPlayer Mini** (mở cửa / từ chối / bị khóa / admin).
+- **Ngõ ra relay:** điều khiển khóa điện (PB1) và tự khóa lại sau 7 giây.
+
+Sơ đồ máy trạng thái và cấu trúc thư mục: xem phần tiếng Anh ở trên.
+
+### 🚀 Hướng dẫn sử dụng
+
+1. Mở `Firmware/RFID_Door_Lock` bằng **STM32CubeIDE**, build và nạp bằng ST-Link.
+2. Đổi UID thẻ admin trong `Core/Src/main.c` (biến `ADMIN_UID`) thành UID thẻ của bạn.
+3. Chép 4 file âm thanh (`0001.mp3` … `0004.mp3`: mở cửa, từ chối, bị khóa, admin) vào thẻ micro-SD của DFPlayer.
+4. Mở `Hardware/01_Design/BTL_HW_V1.0.0.PrjPcb` bằng **Altium Designer** để xem hoặc sửa PCB.
 
 ---
 
