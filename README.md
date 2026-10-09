@@ -1,94 +1,132 @@
-# 🔐 RFID Door Lock System
+# RFID Door Lock
 
-![MCU](https://img.shields.io/badge/MCU-STM32F103C8T6-03234B?logo=stmicroelectronics&logoColor=white)
-![RFID](https://img.shields.io/badge/RFID-MFRC522-6A1B9A)
-![PCB](https://img.shields.io/badge/PCB-Altium%20Designer-A5915F)
-![Language](https://img.shields.io/badge/Language-C-555555?logo=c)
+**An STM32 door-lock prototype with RFID access, keypad passwords and an on-device admin menu.**
 
-<a id="english"></a>**🇬🇧 English** · [🇻🇳 Tiếng Việt](#tieng-viet)
+STM32F103C8T6 · MFRC522 · 4×4 keypad · I²C LCD · DFPlayer Mini · Custom Altium PCB
 
-A smart door lock that opens with an **RFID card** or a **keypad password**, built on an **STM32F103C8T6** with a **custom PCB**, an I²C character LCD, voice feedback and an admin menu for managing cards and passwords.
+<a id="english"></a>
 
-**Course project – Embedded System Design, HCM University of Technology.**
-🎬 **Video demo:** [Google Drive](https://drive.google.com/drive/folders/1EJyoBcpR5TI39vi5_LgunK4Ymn7jQt8R?usp=sharing)
+**English** · [Tiếng Việt](#tieng-viet)
 
----
+Course project for Embedded System Design at HCM University of Technology. The firmware checks a card UID or keypad password, activates a relay for about seven seconds, and provides LCD/voice feedback. An admin card opens the password and card-management menu.
 
-## ✨ Features
+![RFID, keypad, storage and relay control architecture](Docs/images/project-overview.svg)
 
-- **Two ways to unlock:** an RFID card (MFRC522, SPI) or a password on the 4×4 keypad.
-- **Admin mode:** scan the admin card to change the password, add or remove cards, and view all stored cards.
-- **Persistent storage:** the password and card list are saved in the STM32's **internal flash**, so they survive power loss.
-- **Brute-force protection:** after 5 wrong attempts the system locks for **5 min**. It locks for **10 min** after 7 attempts and **20 min** after 9.
-- **Feedback:** status on the I²C LCD and voice prompts from a **DFPlayer Mini** (granted / denied / locked / admin).
-- **Relay output:** drives the electric lock (PB1) and locks again automatically after 7 s.
+*Architecture derived from the STM32 firmware and peripheral drivers.*
 
-## 🧠 State machine
+[Video/demo folder](https://drive.google.com/drive/folders/1EJyoBcpR5TI39vi5_LgunK4Ymn7jQt8R?usp=sharing)
 
-```text
-IDLE ──(card / key)──▶ INPUT_PASS ──▶ ACCESS_GRANTED ──(timeout)──▶ IDLE
-  │                        │
-  │                        └──▶ ACCESS_DENIED ──(≥5 fails)──▶ LOCKED ──▶ IDLE
-  └──(admin card)──▶ ADMIN_MENU ──▶ SET_PASS_1 → SET_PASS_2
-                                 ├─▶ EDIT_CARD (add / delete)
-                                 └─▶ VIEW_ALL
-```
+## Features
 
-## 📂 Project structure
+| Function | Current implementation |
+|---|---|
+| Card access | Compare four UID bytes against the stored card list |
+| Password access | Numeric keypad entry and comparison with the stored password |
+| Admin menu | Change password, add/delete a scanned card, view stored cards |
+| Persistence | `SystemData` stored in the STM32 internal flash |
+| Outputs | Relay on PB1, I²C LCD messages and DFPlayer audio tracks |
+| Access window | Relay returns low after the elapsed timer exceeds `7000 ms` |
+| Invalid attempts | At five failures enter a timed lockout; normal timeout resets the failure count |
+
+The code defines 5/10/20-minute thresholds at 5/7/9 failures. In the normal state-machine flow, the first lockout occurs at five failures and resets the counter on expiry, so routine repeated lockouts are **five minutes**. The higher thresholds are conditional branches, not a demonstrated escalation sequence.
+
+## Repository layout
 
 ```text
 RFID_Door_Lock/
-├── Firmware/RFID_Door_Lock/   # STM32CubeIDE project
+├── Firmware/RFID_Door_Lock/       # STM32CubeIDE project and .ioc
 │   └── Core/
-│       ├── Src/               # main.c (state machine) + CubeMX peripheral init
-│       └── Lib/               # RC522, KEYPAD, LCD I2C, DFPlayer, Storage drivers
-├── Hardware/                  # Altium Designer project (latest)
-│   └── 01_Design/             # Schematics: MCU, POWER, RFID, LCD, Relay + PCB
-├── BTL_HW_V1.0.0/             # Hardware release V1.0.0: design, 3D models, references
-└── Docs/                      # Technical requirements document (PDF / DOCX)
+│       ├── Src/                   # State machine and peripheral initialization
+│       └── Lib/                   # RC522, keypad, LCD, DFPlayer, flash storage
+├── Hardware/01_Design/            # Altium project, schematics and PCB
+├── BTL_HW_V1.0.0/                 # Earlier hardware package, models and references
+└── Docs/                         # Technical requirements and README illustration
 ```
 
-## 🚀 Getting started
+## Firmware pin map
 
-1. Open `Firmware/RFID_Door_Lock` in **STM32CubeIDE**, build and flash it with an ST-Link.
-2. Set your admin card UID in `Core/Src/main.c`:
-   ```c
-   uint8_t ADMIN_UID[4] = {51, 194, 201, 27};   // replace with your card's UID
-   ```
-3. Copy 4 voice tracks (`0001.mp3` … `0004.mp3`: granted, denied, locked, admin) to the DFPlayer's micro-SD card.
-4. Open `Hardware/01_Design/BTL_HW_V1.0.0.PrjPcb` in **Altium Designer** to view or edit the PCB.
+| Connection | Configured MCU pins / setting |
+|---|---|
+| MFRC522 SPI1 | PA5 SCK, PA6 MISO, PA7 MOSI |
+| MFRC522 select/reset | PA4 chip select (RFID module often labels it SDA), PB0 reset |
+| Keypad rows | PB12, PB13, PB14, PB15 |
+| Keypad columns | PA8, PA9, PA10, PA11 |
+| LCD I²C2 | PB10 SCL, PB11 SDA; 7-bit address `0x27` (`0x4E` in the HAL call) |
+| DFPlayer USART1 | PB6 TX, PB7 RX through USART1 remap; `9600 baud` |
+| Relay output | PB1, driven high for access granted |
+
+Match these settings against your PCB revision and module voltage/interface requirements. The remapped USART avoids the keypad's use of PA9/PA10.
+
+## Build and first use
+
+1. Clone the repository and import the existing project under `Firmware/RFID_Door_Lock` into **STM32CubeIDE**.
+2. Open [main.c](Firmware/RFID_Door_Lock/Core/Src/main.c) and set `ADMIN_UID` to your own admin card's four UID bytes.
+3. Review [the flash storage configuration](Firmware/RFID_Door_Lock/Core/Lib/Storage/flash_storage.h). It starts at `0x0800FC00`, the final 1 KB page of the target's 64 KB flash. Reserve that page when arranging the application image.
+4. Prepare the DFPlayer micro-SD card with playback indices **1-4**: granted, denied, locked, admin. Verify the actual playback order; `DF_Play` uses general track command `0x03`, not MP3-folder filename addressing.
+5. Build for the configured STM32F103C8T6, connect ST-Link and flash the application.
+6. On a fresh storage page, the initial password is `12345` and the card list is empty. Use the admin menu to configure the prototype.
+
+```bash
+git clone https://github.com/TuanLinh05/RFID_Door_Lock.git
+```
+
+The audio files are expected on the DFPlayer card and are not supplied in this checkout.
+
+### Keypad controls
+
+| Context | Key | Action |
+|---|---|---|
+| Password entry | `0`-`9` | Append a digit, up to five digits |
+| Password entry | `A` | Delete the last digit; cancel when empty |
+| Password entry | `D` | Submit the entered password |
+| Admin menu | `1` | Enter and confirm a new five-digit password |
+| Admin menu | `2` | Scan a card to add it, or remove it if already present |
+| Admin menu | `9` | View the stored card list |
+| Admin menu | `A` | Return to normal access mode |
+
+## Design files and troubleshooting
+
+Open [BTL_HW_V1.0.0.PrjPcb](Hardware/01_Design/BTL_HW_V1.0.0.PrjPcb) in Altium Designer to inspect the current hardware copy. Keep it consistent with the firmware pin map; the older package is under [BTL_HW_V1.0.0](BTL_HW_V1.0.0).
+
+| Symptom | Check |
+|---|---|
+| Card never recognized | SPI wiring, PA4 select, PB0 reset and the actual card UID |
+| LCD blank | I²C2 wiring, backpack address and display contrast |
+| No voice | DFPlayer power, remapped UART, baud and micro-SD track numbering |
+| Password/card changes disappear | Flash page reservation, erase/program result and storage magic |
+| Keypad functions swapped | Row/column order and the mapping in `keypad.h` |
+| Relay never returns low | State-machine timing and PB1 electrical behavior |
+
+Storage uses a plain password and UID list. This is an educational access-control implementation; it does not add cryptographic card authentication. Flash writes and blocking feedback delays should be reviewed when extending the firmware.
 
 ---
 
 <a id="tieng-viet"></a>
 
-## 🇻🇳 Tiếng Việt
+## Tiếng Việt
 
-[🇬🇧 English](#english) · **🇻🇳 Tiếng Việt**
+[English](#english) · **Tiếng Việt**
 
-Khóa cửa thông minh mở bằng **thẻ RFID** hoặc **mật khẩu trên bàn phím**. Hệ thống dùng **STM32F103C8T6** trên **PCB tự thiết kế**, có màn hình LCD I²C, phát âm thanh thông báo và menu quản trị để quản lý thẻ và mật khẩu.
+Khóa cửa mẫu dùng **STM32F103C8T6**, mở bằng UID thẻ MFRC522 hoặc mật khẩu bàn phím, báo trạng thái trên LCD và DFPlayer. Relay PB1 mở khoảng **7 giây**. Thẻ admin cho phép đổi mật khẩu, thêm/xóa thẻ và xem danh sách.
 
-**Bài tập lớn môn Thiết kế Hệ thống Nhúng, Trường Đại học Bách khoa – ĐHQG TP.HCM.**
-🎬 **Video demo:** [Google Drive](https://drive.google.com/drive/folders/1EJyoBcpR5TI39vi5_LgunK4Ymn7jQt8R?usp=sharing)
+### Cài đặt
 
-### ✨ Tính năng
+1. Import `Firmware/RFID_Door_Lock` vào STM32CubeIDE.
+2. Đổi `ADMIN_UID` trong `main.c` thành UID thẻ admin của bạn.
+3. Đối chiếu [bảng chân](#firmware-pin-map) với PCB. DFPlayer dùng USART1 **PB6/PB7 remap**, không dùng PA9/PA10 của keypad.
+4. Chuẩn bị track chỉ số **1-4** trên DFPlayer (mở cửa, từ chối, bị khóa, admin), kiểm tra đúng thứ tự phát rồi build/nạp bằng ST-Link. Wrapper hiện dùng lệnh `0x03`, không chọn file theo tên trong thư mục MP3.
+5. Khi flash dữ liệu chưa được khởi tạo, mật khẩu mặc định là **12345**, danh sách thẻ rỗng. Dùng admin để cấu hình.
 
-- **Hai cách mở khóa:** thẻ RFID (MFRC522, giao tiếp SPI) hoặc mật khẩu trên bàn phím 4×4.
-- **Chế độ quản trị:** quét thẻ admin để đổi mật khẩu, thêm hoặc xóa thẻ, xem danh sách thẻ.
-- **Lưu trữ bền vững:** mật khẩu và danh sách thẻ được lưu trong **flash nội** của STM32, không mất khi tắt nguồn.
-- **Chống dò mật khẩu:** sai 5 lần thì khóa **5 phút**. Sai 7 lần khóa **10 phút**, sai 9 lần khóa **20 phút**.
-- **Phản hồi:** trạng thái hiện trên LCD I²C, âm thanh từ **DFPlayer Mini** (mở cửa / từ chối / bị khóa / admin).
-- **Ngõ ra relay:** điều khiển khóa điện (PB1) và tự khóa lại sau 7 giây.
+Menu admin: `1` đổi mật khẩu năm chữ số, `2` thêm/xóa thẻ đang quét, `9` xem danh sách, `A` thoát. Khi nhập mật khẩu, `A` xóa/hủy và `D` xác nhận.
 
-Sơ đồ máy trạng thái và cấu trúc thư mục: xem phần tiếng Anh ở trên.
+### Lưu ý triển khai
 
-### 🚀 Hướng dẫn sử dụng
+- Flash dữ liệu bắt đầu tại `0x0800FC00`; cần chừa trang cuối cho `SystemData` khi bố trí firmware.
+- Nhánh khóa có các mốc 5/10/20 phút, nhưng luồng bình thường khóa tại lần sai thứ năm rồi đặt lại bộ đếm khi hết hạn. Vì vậy không nên hiểu là đã có chuỗi leo thang 5 -> 10 -> 20 phút trong vận hành thông thường.
+- Mật khẩu và UID được lưu trực tiếp; đây là prototype môn học dựa trên so khớp UID.
 
-1. Mở `Firmware/RFID_Door_Lock` bằng **STM32CubeIDE**, build và nạp bằng ST-Link.
-2. Đổi UID thẻ admin trong `Core/Src/main.c` (biến `ADMIN_UID`) thành UID thẻ của bạn.
-3. Chép 4 file âm thanh (`0001.mp3` … `0004.mp3`: mở cửa, từ chối, bị khóa, admin) vào thẻ micro-SD của DFPlayer.
-4. Mở `Hardware/01_Design/BTL_HW_V1.0.0.PrjPcb` bằng **Altium Designer** để xem hoặc sửa PCB.
+Schematic/PCB hiện tại nằm trong [Hardware/01_Design](Hardware/01_Design), bản hardware cũ trong [BTL_HW_V1.0.0](BTL_HW_V1.0.0), yêu cầu kỹ thuật trong [Docs](Docs). [Video demo](https://drive.google.com/drive/folders/1EJyoBcpR5TI39vi5_LgunK4Ymn7jQt8R?usp=sharing).
 
 ---
 
-<p align="center">Made by <a href="https://github.com/TuanLinh05">Vu Tuan Linh</a> · HCMUT</p>
+Developed by [Vu Tuan Linh](https://github.com/TuanLinh05) · HCMUT.
